@@ -1,4 +1,4 @@
-vasp2cif patch for FINDSYM 7.1.4
+#vasp2cif patch for FINDSYM 7.1.4
 
 [ISOTROPY for Linux](https://iso.byu.edu/iso/isolinux.php) program by Harold Stokes et al. 
 
