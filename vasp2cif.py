@@ -21,6 +21,9 @@
 #   limitations under the License.
 #
 #   Revision history:
+#      2023-10-19  Seongjoo Jung
+#        - Updated compatibility with latest FINDSYM 7.1.3
+#        - changed default tolerance for convenience 
 #      2013-07-14  Torbjorn Bjorkman
 #        - Runs Harold Stoke's FINDSYM program (if available) 
 #          to determine the space group and standard setting.
@@ -62,7 +65,7 @@ parser = OptionParser()
 parser.add_option("-v","--verbose",dest="verbose",help="Print CIF to stdout",action="store_true")
 parser.add_option("-o","--output",dest="output",help="Save CIF to named file",metavar="FILE")
 parser.add_option("-e","--elements",dest="elements",help="""Supply elements if no POTCAR is present. Example: --elements="Fe,Co,Ni" """,metavar="list of elements")
-parser.add_option("--findsym-tolerance",dest="findsymtol",help="""Tolerance used for FINDSYM (default=0, minimal value).""")
+parser.add_option("--findsym-tolerance",dest="findsymtol",help="""Tolerance used for FINDSYM (default=0.001, minimal value).""")
 parser.add_option("--no-findsym",dest="nofindsym",help="""Don't run FINDSYM to find symmetry of the crystal.""")
 (options,args) = parser.parse_args()
 
@@ -85,7 +88,7 @@ fullHMlist = ['4/m -3 2/m',
 if options.findsymtol:
 	findsymtolerance = float(options.findsymtol)
 else:
-	findsymtolerance = 0
+	findsymtolerance = 0.001
 try:
 	p=Popen(["findsym"],stdin=PIPE,stdout=PIPE)
 	p.stdin.write("blah\n0\n2\n1 1 1 90 90 90\n1\n1 0 0\n0 1 0\n0 0 1\n1\n1\n0 0 0")
@@ -123,32 +126,34 @@ def ciffilestring(cell):
 	outstring = ""
 	nofindsym = not findsym
 	if findsym:
-		# Construct FINDSYM input
-		findsymstring = " \n"
-		findsymstring += str(findsymtolerance)+"\n"
-#		findsymstring += "2\n"
-#		findsymstring += str(cell.a)+" "+str(cell.b)+" "+str(cell.c)+" "+str(cell.alpha)+" "+str(cell.beta)+" "+str(cell.gamma)+"\n"
-		findsymstring += "1\n"
-		findsymstring += str(cell.latticevectors[0][0])+" "+str(cell.latticevectors[0][1])+" "+str(cell.latticevectors[0][2])+"\n"
-		findsymstring += str(cell.latticevectors[1][0])+" "+str(cell.latticevectors[1][1])+" "+str(cell.latticevectors[1][2])+"\n"
-		findsymstring += str(cell.latticevectors[2][0])+" "+str(cell.latticevectors[2][1])+" "+str(cell.latticevectors[2][2])+"\n"
-		findsymstring += "1\n"
-		findsymstring += "1 0 0\n"
-		findsymstring += "0 1 0\n"
-		findsymstring += "0 0 1\n"
-		findsymstring += str(len(cell.sites))+"\n"
-		for a in cell.sites:
-			findsymstring += a[0]+" "
-		findsymstring += "\n"
-		for a in cell.sites:
-			findsymstring += "%1.15f   %1.15f   %1.15f\n"%(a[1],a[2],a[3])
+		with open('input.txt', 'w') as f:
+			# Construct FINDSYM input
+			f.write(" \n")
+			f.write(str(findsymtolerance)+"\n")
+			f.write(str(findsymtolerance)+"\n")
+			f.write(str(findsymtolerance)+"\n")
+			f.write("1\n")
+			f.write(str(cell.latticevectors[0][0])+" "+str(cell.latticevectors[0][1])+" "+str(cell.latticevectors[0][2])+"\n")
+			f.write(str(cell.latticevectors[1][0])+" "+str(cell.latticevectors[1][1])+" "+str(cell.latticevectors[1][2])+"\n")
+			f.write(str(cell.latticevectors[2][0])+" "+str(cell.latticevectors[2][1])+" "+str(cell.latticevectors[2][2])+"\n")
+			f.write("1\n")
+			f.write("1 0 0\n")
+			f.write("0 1 0\n")
+			f.write("0 0 1\n")
+			f.write(str(len(cell.sites))+"\n")
+			for a in cell.sites:
+				f.write(a[0]+" ")
+			f.write("\n")
+			for a in cell.sites:
+				f.write("%1.15f   %1.15f   %1.15f\n"%(a[1],a[2],a[3]))
+
 		# Call findsym with input and catch output
-		p=Popen(["findsym"],stdin=PIPE,stdout=PIPE)
-		p.stdin.write(findsymstring)
+		p=Popen(["findsym","input.txt"],stdin=PIPE,stdout=PIPE)
 		findsymoutput=p.communicate()[0]
 		findsymoutlines = findsymoutput.split("\n")
 		# Delete log
 		call(['rm','-f','findsym.log'])
+		call(['rm','-f','input.txt'])
 
 		# Check that FINDSYM returned a cif at the end 
 		cifout = False
@@ -159,7 +164,7 @@ def ciffilestring(cell):
 				cifout = True
 				break
 		if not cifout:
-			print "***Error: FINDSYM failed to produce a CIF file, no symmetrization done."
+			print("***Error: FINDSYM failed to produce a CIF file, no symmetrization done.")
 			nofindsym = True
 
 	outstring += "data_" + cell.label.strip(" ")+"\n"
