@@ -1,7 +1,6 @@
 vasp2cif compatible with FINDSYM 7.1.4
 
-Requires python2 (python 2.5 or above)
-
+Requires python2 (python 2.5 or above) and FINDSYM 7.1.4
 [ISOTROPY for Linux](https://iso.byu.edu/iso/isolinux.php) program by Harold Stokes et al. 
 
 ## Original Authors
