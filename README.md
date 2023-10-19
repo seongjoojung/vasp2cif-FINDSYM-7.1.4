@@ -1,4 +1,4 @@
-vasp2cif patch for FINDSYM 7.1.4
+vasp2cif compatible with FINDSYM 7.1.4
 
 Requires python2 (python 2.5 or above)
 
