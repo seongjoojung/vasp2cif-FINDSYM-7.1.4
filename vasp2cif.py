@@ -154,6 +154,7 @@ def ciffilestring(cell):
 		# Delete log
 		call(['rm','-f','findsym.log'])
 		call(['rm','-f','input.txt'])
+		call(['rm','-f','findsym.cif'])
 
 		# Check that FINDSYM returned a cif at the end 
 		cifout = False
