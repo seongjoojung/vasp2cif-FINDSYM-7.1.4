@@ -2,7 +2,7 @@ vasp2cif compatible Python3 with FINDSYM 7.1.4
 
 ## Installation
 
-Move `findsym` executable file to one of the directories in your `PATH` or add the folder containing `findsym` to your `PATH`
+Move `findsym` executable file to one of the directories in your `PATH` or add the folder containing `findsym` to your `PATH`. Check out [the original repositiory](https://github.com/egplar/vasp2cif) for more details in installation and usage.
 
 ## FINDSYM
 
