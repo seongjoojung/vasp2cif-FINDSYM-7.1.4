@@ -68,7 +68,7 @@ parser = OptionParser()
 parser.add_option("-v","--verbose",dest="verbose",help="Print CIF to stdout",action="store_true")
 parser.add_option("-o","--output",dest="output",help="Save CIF to named file",metavar="FILE")
 parser.add_option("-e","--elements",dest="elements",help="""Supply elements if no POTCAR is present. Example: --elements="Fe,Co,Ni" """,metavar="list of elements")
-parser.add_option("--findsym-tolerance",dest="findsymtol",help="""Tolerance used for FINDSYM (default=0.001, minimal value).""")
+parser.add_option("--findsym-tolerance",dest="findsymtol",help="""Tolerance used for FINDSYM (default=1e-4).""")
 parser.add_option("--no-findsym",dest="nofindsym",help="""Don't run FINDSYM to find symmetry of the crystal.""")
 (options,args) = parser.parse_args()
 
@@ -91,7 +91,7 @@ fullHMlist = ['4/m -3 2/m',
 if options.findsymtol:
 	findsymtolerance = float(options.findsymtol)
 else:
-	findsymtolerance = 0.001
+	findsymtolerance = 1e-4
 try:
 	p=Popen(["findsym"],stdin=PIPE,stdout=PIPE,encoding='utf8')
 	p.stdin.write("blah\n0\n2\n1 1 1 90 90 90\n1\n1 0 0\n0 1 0\n0 0 1\n1\n1\n0 0 0")
