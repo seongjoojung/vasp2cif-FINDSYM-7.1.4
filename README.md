@@ -1,13 +1,21 @@
-vasp2cif compatible with FINDSYM 7.1.4
+vasp2cif compatible Python3 with FINDSYM 7.1.4
 
-Requires python2 (python 2.5 or above) and FINDSYM 7.1.4
+## Installation
 
-[ISOTROPY for Linux](https://iso.byu.edu/iso/isolinux.php) program by Harold Stokes et al. 
+Move `findsym` executable file to one of the directories in your `PATH` or add the folder containing `findsym` to your `PATH`
 
-## Original Authors
+## FINDSYM
 
+[ISOTROPY for Linux](https://iso.byu.edu/iso/isolinux.php) program by H. T. Stokes, D. M. Hatch, and B. J. Campbell.
+
+## vasp2cif
+
+### [Original Authors](https://github.com/egplar/vasp2cif)
 * [Peter Larsson](http://www.nsc.liu.se/~pla/)
 * [Torbjörn Björkman](http://physics.aalto.fi/personnel/?id=538)
+
+### [Python 3 support](https://github.com/nilamandal/vasp2cif)
+* [Nila Mandal](https://github.com/nilamandal)
 
 ## License
 

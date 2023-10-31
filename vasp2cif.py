@@ -22,8 +22,11 @@
 #
 #   Revision history:
 #      2023-10-19  Seongjoo Jung
+#        - Updated Python 3 compatibility
 #        - Updated compatibility with latest FINDSYM 7.1.3
 #        - changed default tolerance for convenience 
+#      2022-03-21  Nila Mandal
+#        - Editted for compatibility with Python 3.
 #      2013-07-14  Torbjorn Bjorkman
 #        - Runs Harold Stoke's FINDSYM program (if available) 
 #          to determine the space group and standard setting.
@@ -54,7 +57,7 @@
 
 import os
 import sys
-import commands
+import subprocess
 import math
 import re
 from subprocess import Popen,call,PIPE
@@ -90,7 +93,7 @@ if options.findsymtol:
 else:
 	findsymtolerance = 0.001
 try:
-	p=Popen(["findsym"],stdin=PIPE,stdout=PIPE)
+	p=Popen(["findsym"],stdin=PIPE,stdout=PIPE,encoding='utf8')
 	p.stdin.write("blah\n0\n2\n1 1 1 90 90 90\n1\n1 0 0\n0 1 0\n0 0 1\n1\n1\n0 0 0")
 	output = p.communicate()[0]
 	if p.returncode != 0:
@@ -126,7 +129,7 @@ def ciffilestring(cell):
 	outstring = ""
 	nofindsym = not findsym
 	if findsym:
-		with open('input.txt', 'w') as f:
+		with open('input.tmp', 'w') as f:
 			# Construct FINDSYM input
 			f.write(" \n")
 			f.write(str(findsymtolerance)+"\n")
@@ -148,15 +151,15 @@ def ciffilestring(cell):
 				f.write("%1.15f   %1.15f   %1.15f\n"%(a[1],a[2],a[3]))
 
 		# Call findsym with input and catch output
-		p=Popen(["findsym","input.txt"],stdin=PIPE,stdout=PIPE)
+		p=Popen(["findsym","input.tmp"],stdin=PIPE,stdout=PIPE,encoding='utf8')
 		findsymoutput=p.communicate()[0]
 		findsymoutlines = findsymoutput.split("\n")
 		# Delete log
 		call(['rm','-f','findsym.log'])
-		call(['rm','-f','input.txt'])
+		call(['rm','-f','input.tmp'])
 		call(['rm','-f','findsym.cif'])
 
-		# Check that FINDSYM returned a cif at the end 
+		# Check that FINDSYM returned a cif at the end
 		cifout = False
 		i = 0
 		for line in findsymoutlines:
@@ -205,7 +208,7 @@ def ciffilestring(cell):
 		i = 1
 		for a in cell.sites:
 			outstring += "%s%i   %s   %1.15f   %1.15f   %1.15f   1.0\n" % (a[0], i, a[0], a[1], a[2], a[3])
-			i += 1		 
+			i += 1
 		outstring += "\n\n"
 	return outstring
 
@@ -236,7 +239,7 @@ def filetype(f):
 				break
 	f.seek(0) # Rewind file
 	return filetype
-	
+
 def mvmult3(mat,vec):
 	# matrix-vector multiplication
 	w = []
@@ -271,18 +274,19 @@ if len(args) == 0:
 	cif_file = sys.stdout
 elif len(args) == 1:
 	#Write to input.cif
-	input_files = [(file(arg,'r'),arg) for arg in args]
+	temptemp=open(args[0],'r')
+	input_files = [(open(arg,'r'),arg) for arg in args]
 	if options.output:
-		cif_file = file(options.output,'w')
+		cif_file = open(options.output,'w')
 	else:
-		cif_file = file(args[0] + ".cif",'w')
+		cif_file = open(args[0] + ".cif",'w')
 else:
 	#Write to input.cif
-	input_files = [(file(arg,'r'),arg) for arg in args[0:]]
+	input_files = [(open(arg,'r'),arg) for arg in args[0:]]
 	if options.output:
-		cif_file = file(options.output,'w')
+		cif_file = open(options.output,'w')
 	else:
-		cif_file = file(args[0] + "_etc.cif",'w')
+		cif_file = open(args[0] + "_etc.cif",'w')
 
 # Initialize Cell object.
 cell = Cell()
@@ -313,7 +317,7 @@ for input_file,filename in input_files:
 			#Read atoms from supplied string, eg "Li,Fe,Si,O"
 			atoms = options.elements.split(",")
 			assert(len(atoms) > 0)
-		else:		
+		else:
 			if vasp5:
 				#Read elements from line 5
 				words = poscar[5].split()
@@ -324,7 +328,7 @@ for input_file,filename in input_files:
 					sys.stderr.write("ERROR: Cannot find POTCAR. Please supply atom labels with the -e flag.\n")
 					sys.exit(1)
 
-				potcar_lines = commands.getoutput("grep TITEL POTCAR").split("\n")
+				potcar_lines = subprocess.getoutput("grep TITEL POTCAR").split("\n")
 				if len(potcar_lines) == 0:
 					sys.stderr.write("ERROR: POTCAR file exists, but is empty? Supply atom labels with the -e flag.\n")
 					sys.exit(1)
@@ -420,11 +424,10 @@ for input_file,filename in input_files:
 		cell.sites = []
 		for i in range(0,len(atomlabels)):
 			#extract first three fields in POSCAR line
-			coords = map(float,poscar[i+offset+1].split()[0:3])
-
+			#coords = map(float,poscar[i+offset+1].split()[0:3])
+			coords = list(float(x) for x in poscar[i+offset+1].split()[0:3])
 			if not direct_coordinates:
 				coords = mvmult3(inverse_lattice_vectors, coords)
-
 			cell.sites.append((atomlabels[i],coords[0],coords[1],coords[2]))
 
 		# Print cell to cif files
@@ -434,11 +437,11 @@ for input_file,filename in input_files:
 			sys.stdout.write(cifstring)
 		# increment cif block counter
 		cifblocknr += 1
-	
+
 	elif filetype(input_file) == "OUTCAR":
 		# First find elements and how many of each.
 		atoms = []
-		titellines = commands.getoutput("grep TITEL "+filename).split("\n")
+		titellines = subprocess.getoutput("grep TITEL "+filename).split("\n")
 		if len(titellines) == 0:
 			sys.stderr.write("ERROR: Cannot read elements. Damaged OUTCAR file?\n")
 			sys.exit(1)
@@ -448,7 +451,7 @@ for input_file,filename in input_files:
 			#Note, we need the split _ to deal with names like "Li_sv"
 			atoms.append(words[3].split("_")[0])
 		# How many of each?
-		natoms = [int(s) for s in commands.getoutput("grep 'ions per type =' "+filename).split()[4:]]
+		natoms = [int(s) for s in subprocess.getoutput("grep 'ions per type =' "+filename).split()[4:]]
 		# Set up initial position array
 		i = 0
 		cell.sites = []
@@ -495,7 +498,7 @@ for input_file,filename in input_files:
 				cell.alpha = math.acos((b[0]*c[0]+b[1]*c[1]+b[2]*c[2])/(cell.b*cell.c))*180/math.pi
 				cell.beta = math.acos((a[0]*c[0]+a[1]*c[1]+a[2]*c[2])/(cell.a*cell.c))*180/math.pi
 				cell.gamma = math.acos((b[0]*a[0]+b[1]*a[1]+b[2]*a[2])/(cell.a*cell.b))*180/math.pi
-				
+
 			# Read positions
 			if re_positions.search(line):
 				posline = -2
@@ -519,4 +522,3 @@ for input_file,filename in input_files:
 		sys.exit(1)
 	# increment input file counter
 	inputfilenr += 1
-
