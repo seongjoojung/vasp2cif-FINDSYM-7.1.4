@@ -1,4 +1,4 @@
-vasp2cif compatible Python3 with FINDSYM 7.1.4
+vasp2cif compatible with Python 3 and FINDSYM 7.1.4
 
 ## Installation
 
